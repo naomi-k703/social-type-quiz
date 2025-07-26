@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ソーシャルタイプ対応クイズ</title>
+    <style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
+    padding: 15px;
+    overflow-x: hidden;
+}
+
+h1 {
+    color: #fff;
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 2.5em;
+}
+
+.subtitle {
+    color: #e0e7ff;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 1.1em;
+}
+
+#game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    background: #fff;
+    padding: 15px;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    max-width: 100%;
+    width: 100%;
+    max-width: 800px;
+    overflow: hidden;
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid #e2e8f0;
+}
+
+.stat-value {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #3b82f6;
+}
+
+.stat-label {
+    font-size: 0.8em;
+    color: #64748b;
+    margin-top: 5px;
+}
+
+.social-types {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    width: 100%;
+    margin: 20px 0;
+}
+
+.social-type {
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid #e2e8f0;
+}
+
+.social-type-emoji {
+    font-size: 3em;
+    margin-bottom: 10px;
+}
+
+.social-type-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.social-type-desc {
+    font-size: 0.8em;
+    color: #64748b;
+}
+
+.question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f1f5f9;
+    border-radius: 12px;
+    width: 100%;
+}
+
+.question-number {
+    background: #3b82f6;
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.9em;
+}
+
+.timer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.timer-text {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.timer-bar {
+    width: 80px;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.timer-progress {
+    height: 100%;
+    background: #3b82f6;
+    transition: width 1s linear;
+}
+
+.timer-progress.warning {
+    background: #ef4444;
+}
+
+.current-type {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    text-align: center;
+    width: 100%;
+}
+
+.current-type-emoji {
+    font-size: 4em;
+    margin-bottom: 15px;
+}
+
+.current-type-name {
+    font-size: 1.8em;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.current-type-desc {
+    font-size: 1em;
+    opacity: 0.9;
+}
+
+.question-text {
+    font-size: 1.2em;
+    font-weight: 500;
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    border-left: 4px solid #3b82f6;
+    text-align: center;
+    line-height: 1.6;
+    width: 100%;
+}
+
+.options-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+}
+
+.option-button {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.option-button:hover {
+    border-color: #3b82f6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.option-button.correct {
+    border-color: #10b981;
+    background: #ecfdf5;
+}
+
+.option-button.incorrect {
+    border-color: #ef4444;
+    background: #fef2f2;
+}
+
+.option-button.disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.result-icon {
+    font-size: 1.5em;
+    margin-left: auto;
+}
+
+.result-message {
+    text-align: center;
+    margin: 20px 0;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.result-message.correct {
+    color: #10b981;
+}
+
+.result-message.incorrect {
+    color: #ef4444;
+}
+
+.result-message.timeout {
+    color: #f59e0b;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    width: 100%;
+    justify-content: center;
+}
+
+.btn {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+    background: #e2e8f0;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.final-results {
+    text-align: center;
+    padding: 20px;
+}
+
+.final-score {
+    font-size: 6em;
+    margin-bottom: 20px;
+}
+
+.final-message {
+    font-size: 2em;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.final-stats {
+    font-size: 1.2em;
+    color: #64748b;
+    margin-bottom: 20px;
+}
+
+.type-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.type-result {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.type-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.type-score {
+    text-align: right;
+}
+
+.type-accuracy {
+    font-weight: bold;
+}
+
+.type-count {
+    font-size: 0.9em;
+    color: #64748b;
+}
+
+.show-options-instruction {
+    text-align: center;
+    color: #64748b;
+    font-size: 1.1em;
+    margin: 20px 0;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 1.8em;
+    }
+
+    #game-container {
+        padding: 10px;
+        gap: 15px;
+    }
+
+    .subtitle {
+        font-size: 0.9em;
+        line-height: 1.3;
+    }
+
+    .social-types {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .stats-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .question-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+        padding: 10px;
+    }
+
+    .current-type-emoji {
+        font-size: 3em;
+    }
+
+    .current-type-name {
+        font-size: 1.4em;
+    }
+
+    .current-type {
+        padding: 20px;
+    }
+
+    .question-text {
+        font-size: 1em;
+        padding: 15px;
+        line-height: 1.4;
+    }
+
+    .option-button {
+        padding: 15px;
+        gap: 10px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+        padding: 15px 20px;
+    }
+
+    .type-results {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+}
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- タイトルセクション - 全画面共通 -->
+        <div style="text-align: center; margin-bottom: 25px; padding: 20px; background: rgba(255,255,255,0.95); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <h2 style="font-size: 1.8em; font-weight: bold; color: #1f2937; margin-bottom: 8px;">ソーシャルタイプ対応クイズ</h2>
+            <p style="font-size: 0.9em; color: #6b7280; margin: 0; line-height: 1.4;">
+                じゃんけんのように3択で瞬間判定！<br>
+                営業スキルを鍛えよう
+            </p>
+        </div>
+        <!-- 統計表示 -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-value" id="accuracy">0%</div>
+                <div class="stat-label">正解率</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="streak">0</div>
+                <div class="stat-label">連続正解</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="max-streak">0</div>
+                <div class="stat-label">最高記録</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="total-questions">0</div>
+                <div class="stat-label">総問題数</div>
+            </div>
+        </div>
+
+        <!-- メニュー画面 -->
+        <div id="menu-screen">
+            <p>4つのソーシャルタイプに対する最適な対応を3択から選ぼう！</p>
+            
+            <div class="social-types">
+                <div class="social-type">
+                    <div class="social-type-emoji">🚀</div>
+                    <div class="social-type-name">ドライバー</div>
+                    <div class="social-type-desc">結果重視・決断が早い・効率性を求める</div>
+                </div>
+                <div class="social-type">
+                    <div class="social-type-emoji">🎭</div>
+                    <div class="social-type-name">エクスプレッシブ</div>
+                    <div class="social-type-desc">感情表現豊か・人間関係重視・創造的</div>
+                </div>
+                <div class="social-type">
+                    <div class="social-type-emoji">🤝</div>
+                    <div class="social-type-name">エミアブル</div>
+                    <div class="social-type-desc">協調性重視・安定志向・チームワークを大切にする</div>
+                </div>
+                <div class="social-type">
+                    <div class="social-type-emoji">📊</div>
+                    <div class="social-type-name">アナリティカル</div>
+                    <div class="social-type-desc">データ重視・慎重・論理的思考</div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <p style="color: #64748b; margin-bottom: 20px;">
+                    • 問題文を読んだ後、選択肢画面で瞬間判定<br>
+                    • 各選択肢15秒の制限時間<br>
+                    • 連続正解でスコアアップ！
+                </p>
+                <button class="btn btn-primary" onclick="startGame()">
+                    🎮 ゲーム開始
+                </button>
+            </div>
+        </div>
+
+        <!-- 問題表示画面 -->
+        <div id="question-screen" style="display: none;">
+            
+            
+            <div class="question-header">
+                <div class="question-number" id="question-number">問題 1 / 3</div>
+                <div style="color: #64748b;">問題を読んでください</div>
+            </div>
+
+            <div class="current-type" id="current-type">
+                <div class="current-type-emoji" id="current-type-emoji">🚀</div>
+                <div class="current-type-name" id="current-type-name">ドライバー</div>
+                <div class="current-type-desc" id="current-type-desc">結果重視・決断が早い・効率性を求める</div>
+            </div>
+
+            <div class="question-text" id="question-text">
+                問題文がここに表示されます
+            </div>
+
+            <div class="show-options-instruction">
+                問題を理解したら、選択肢を表示して瞬間判定しましょう！
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="showOptions()">
+                    ⚡ 選択肢を表示
+                </button>
+            </div>
+        </div>
+
+        <!-- 選択肢表示画面 -->
+        <div id="options-screen" style="display: none;">
+    
+    <div class="question-header">
+        <div class="question-number" id="options-question-number">問題 1 / 3</div>
+        <div class="timer">
+            <div class="timer-text" id="timer-text">15秒</div>
+            <div class="timer-bar">
+                <div class="timer-progress" id="timer-progress"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ソーシャルタイプ情報をコンパクトに表示 -->
+    <div style="display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px; background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%); border-radius: 12px; margin-bottom: 15px;">
+        <span id="options-type-emoji" style="font-size: 2em;">📊</span>
+        <div>
+            <div id="options-type-name" style="font-size: 1.2em; font-weight: bold; margin-bottom: 3px;">アナリティカル</div>
+            <div id="options-type-desc" style="font-size: 0.8em; color: #6b7280;">データ重視・慎重・論理的思考</div>
+        </div>
+    </div>
+
+    <!-- 問題文をコンパクトに表示 -->
+    <div id="options-question-text" style="font-size: 1em; font-weight: 500; background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3b82f6; text-align: center; line-height: 1.4;">
+        問題文がここに表示されます
+    </div>
+
+    <div style="text-align: center; margin-bottom: 20px; color: #64748b; font-weight: bold;">
+        瞬間判定！最適な対応を選んでください
+    </div>
+
+    <div class="options-container" id="options-container">
+        <!-- 選択肢がJavaScriptで動的に生成されます -->
+    </div>
+
+    <div id="result-section" style="display: none;">
+        <div class="result-message" id="result-message"></div>
+        <div class="action-buttons">
+            <button class="btn btn-primary" id="next-button" onclick="nextQuestion()">
+                ⚡ 次の問題
+            </button>
+        </div>
+    </div>
+</div>
+
+        <!-- 結果画面 -->
+        <div id="result-screen" style="display: none;">
+            <div class="final-results">
+                <div class="final-score" id="final-score">🏆</div>
+                <div class="final-message" id="final-message">素晴らしい！</div>
+                <div class="final-stats" id="final-stats">
+                    正解率: <span id="final-accuracy">80%</span> (<span id="final-correct">8</span>/<span id="final-total">10</span>問正解)
+                </div>
+                <div class="final-stats">
+                    最高連続正解: <span id="final-max-streak">5</span>問
+                </div>
+
+                <h3>タイプ別成績</h3>
+                <div class="type-results" id="type-results">
+                    <!-- タイプ別結果がJavaScriptで動的に生成されます -->
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="startGame()">
+                        🔄 もう一度
+                    </button>
+                    <button class="btn btn-secondary" onclick="showMenu()">
+                        📋 メニューに戻る
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ソーシャルタイプの定義
+        const socialTypes = {
+          driver: {
+            name: "ドライバー",
+            emoji: "🚀",
+            description: "結果重視・決断が早い・効率性を求める",
+            color: "red",
+          },
+          expressive: {
+            name: "エクスプレッシブ",
+            emoji: "🎭",
+            description: "感情表現豊か・人間関係重視・創造的",
+            color: "yellow",
+          },
+          amiable: {
+            name: "エミアブル",
+            emoji: "🤝",
+            description: "協調性重視・安定志向・チームワークを大切にする",
+            color: "green",
+          },
+          analytical: {
+            name: "アナリティカル",
+            emoji: "📊",
+            description: "データ重視・慎重・論理的思考",
+            color: "blue",
+          },
+        }
+
+        // クイズ問題の定義
+        const quizQuestions = [
+  {
+    type: "driver",
+    question: "ドライバータイプの顧客が「時間がないので要点だけ教えて」と言いました。最適な対応は？",
+    options: [
+      { text: "結論から簡潔に、具体的な効果と期限を伝える", correct: true, icon: "⚡" },
+      { text: "詳細な資料を用意して、じっくり説明する", correct: false, icon: "📚" },
+      { text: "まずは信頼関係を築くために雑談から始める", correct: false, icon: "☕" },
+    ],
+  },
+  {
+    type: "driver",
+    question: "ドライバータイプの顧客に提案する際、最も重要なポイントは？",
+    options: [
+      { text: "ROIと導入スケジュールを明確に示す", correct: true, icon: "📈" },
+      { text: "チームの和を重視した導入プロセスを提案", correct: false, icon: "👥" },
+      { text: "革新的なアイデアと将来の可能性を語る", correct: false, icon: "💡" },
+    ],
+  },
+  {
+    type: "driver",
+    question: "ドライバータイプの顧客が決断を迫られている時の対応は？",
+    options: [
+      { text: "「今決めれば○○のメリットがあります」と背中を押す", correct: true, icon: "🎯" },
+      { text: "「ゆっくり検討してください」と時間を与える", correct: false, icon: "⏰" },
+      { text: "他社の成功事例を感情的に語る", correct: false, icon: "🎪" },
+    ],
+  },
+  {
+    type: "expressive",
+    question: "エクスプレッシブタイプの顧客が「面白そう！」と興味を示しました。次の対応は？",
+    options: [
+      { text: "具体的な数値データで効果を証明する", correct: false, icon: "📊" },
+      { text: "成功事例のストーリーを感情豊かに語る", correct: true, icon: "🎭" },
+      { text: "リスクの少なさを論理的に説明する", correct: false, icon: "🛡️" },
+    ],
+  },
+  {
+    type: "expressive",
+    question: "エクスプレッシブタイプの顧客との商談で重視すべきは？",
+    options: [
+      { text: "将来のビジョンと可能性を共有する", correct: true, icon: "✨" },
+      { text: "詳細な仕様書を丁寧に説明する", correct: false, icon: "📋" },
+      { text: "コストパフォーマンスを強調する", correct: false, icon: "💰" },
+    ],
+  },
+  {
+    type: "expressive",
+    question: "エクスプレッシブタイプの顧客が迷っている時は？",
+    options: [
+      { text: "他の成功企業の華やかな事例を紹介する", correct: true, icon: "🌟" },
+      { text: "冷静に数値で比較検討を促す", correct: false, icon: "🔢" },
+      { text: "安全性を重視した提案に変更する", correct: false, icon: "🔒" },
+    ],
+  },
+  {
+    type: "amiable",
+    question: "エミアブルタイプの顧客が「チームの皆が心配している」と言いました。対応は？",
+    options: [
+      { text: "「すぐに決断すべきです」と急かす", correct: false, icon: "⏰" },
+      { text: "充実したサポート体制と安全性を説明する", correct: true, icon: "🤝" },
+      { text: "革新的な機能の素晴らしさを熱く語る", correct: false, icon: "🔥" },
+    ],
+  },
+  {
+    type: "amiable",
+    question: "エミアブルタイプの顧客との信頼関係構築で大切なのは？",
+    options: [
+      { text: "長期的なパートナーシップを約束する", correct: true, icon: "🤝" },
+      { text: "競合他社との差別化を強調する", correct: false, icon: "⚔️" },
+      { text: "最新技術の優位性をアピールする", correct: false, icon: "🚀" },
+    ],
+  },
+  {
+    type: "amiable",
+    question: "エミアブルタイプの顧客が導入を躊躇している時は？",
+    options: [
+      { text: "段階的な導入プランと手厚いサポートを提案", correct: true, icon: "🛡️" },
+      { text: "期限を設けて決断を促す", correct: false, icon: "⏳" },
+      { text: "他社の派手な成功事例を紹介する", correct: false, icon: "🎪" },
+    ],
+  },
+  {
+    type: "analytical",
+    question: "アナリティカルタイプの顧客が「詳細な資料が欲しい」と言いました。対応は？",
+    options: [
+      { text: "感情に訴えかけて決断を促す", correct: false, icon: "❤️" },
+      { text: "包括的なデータと比較資料を提供する", correct: true, icon: "📊" },
+      { text: "「今すぐ決めれば特典があります」と急かす", correct: false, icon: "🎁" },
+    ],
+  },
+  {
+    type: "analytical",
+    question: "アナリティカルタイプの顧客との商談で最も重要なのは？",
+    options: [
+      { text: "論理的な根拠と具体的な数値を示す", correct: true, icon: "📈" },
+      { text: "情熱的にビジョンを語る", correct: false, icon: "🔥" },
+      { text: "人間関係を重視した提案をする", correct: false, icon: "👥" },
+    ],
+  },
+  {
+    type: "analytical",
+    question: "アナリティカルタイプの顧客が検討時間を求めた時は？",
+    options: [
+      { text: "十分な検討時間と追加資料を提供する", correct: true, icon: "📚" },
+      { text: "その場で決断するよう説得する", correct: false, icon: "⚡" },
+      { text: "感情的なストーリーで心を動かす", correct: false, icon: "💝" },
+    ],
+  },
+]
+
+        // ゲーム状態
+        const gameState = {
+          currentScreen: "menu",
+          currentQuestion: 0,
+          selectedAnswer: null,
+          showResult: false,
+          timeLeft: 15,
+          isTimerActive: false,
+          shuffledQuestions: [],
+          stats: {
+            totalQuestions: 0,
+            correctAnswers: 0,
+            streak: 0,
+            maxStreak: 0,
+            typeStats: {
+              driver: { correct: 0, total: 0 },
+              expressive: { correct: 0, total: 0 },
+              amiable: { correct: 0, total: 0 },
+              analytical: { correct: 0, total: 0 },
+            },
+          },
+        }
+
+        let timerInterval
+
+        // 画面表示制御 - 直接style.displayを使用
+        function showScreen(screenName) {
+          console.log("画面切り替え:", screenName)
+          
+          // 全ての画面を非表示
+          document.getElementById('menu-screen').style.display = 'none'
+          document.getElementById('question-screen').style.display = 'none'
+          document.getElementById('options-screen').style.display = 'none'
+          document.getElementById('result-screen').style.display = 'none'
+          
+          // 指定された画面のみ表示
+          const targetScreen = document.getElementById(screenName + '-screen')
+          if (targetScreen) {
+            targetScreen.style.display = 'block'
+            console.log(screenName + '-screen を表示しました')
+          }
+          
+          gameState.currentScreen = screenName
+        }
+
+        // 統計表示更新
+        function updateStatsDisplay() {
+          const accuracy =
+            gameState.stats.totalQuestions > 0
+              ? Math.round((gameState.stats.correctAnswers / gameState.stats.totalQuestions) * 100)
+              : 0
+
+          const accuracyElement = document.getElementById("accuracy")
+          const streakElement = document.getElementById("streak")
+          const maxStreakElement = document.getElementById("max-streak")
+          const totalQuestionsElement = document.getElementById("total-questions")
+
+          if (accuracyElement) accuracyElement.textContent = accuracy + "%"
+          if (streakElement) streakElement.textContent = gameState.stats.streak
+          if (maxStreakElement) maxStreakElement.textContent = gameState.stats.maxStreak
+          if (totalQuestionsElement) totalQuestionsElement.textContent = gameState.stats.totalQuestions
+        }
+
+        // ゲーム開始
+        function startGame() {
+          console.log("ゲーム開始")
+          gameState.shuffledQuestions = [...quizQuestions].sort(() => Math.random() - 0.5)
+          gameState.currentQuestion = 0
+          gameState.selectedAnswer = null
+          gameState.showResult = false
+          gameState.timeLeft = 15
+
+          showScreen("question")
+          displayQuestion()
+        }
+
+        // 問題表示
+        function displayQuestion() {
+          const question = gameState.shuffledQuestions[gameState.currentQuestion]
+          const type = socialTypes[question.type]
+
+          // 問題番号更新
+          const questionNumberElement = document.getElementById("question-number")
+          if (questionNumberElement) {
+            questionNumberElement.textContent = `問題 ${gameState.currentQuestion + 1} / ${gameState.shuffledQuestions.length}`
+          }
+
+          // ソーシャルタイプ表示
+          const currentTypeEmojiElement = document.getElementById("current-type-emoji")
+          const currentTypeNameElement = document.getElementById("current-type-name")
+          const currentTypeDescElement = document.getElementById("current-type-desc")
+
+          if (currentTypeEmojiElement) currentTypeEmojiElement.textContent = type.emoji
+          if (currentTypeNameElement) currentTypeNameElement.textContent = type.name
+          if (currentTypeDescElement) currentTypeDescElement.textContent = type.description
+
+          // 問題文表示
+          const questionTextElement = document.getElementById("question-text")
+          if (questionTextElement) {
+            questionTextElement.textContent = question.question
+          }
+        }
+
+        // 選択肢画面表示
+        function showOptions() {
+  console.log("選択肢画面表示開始")
+  const question = gameState.shuffledQuestions[gameState.currentQuestion]
+  const type = socialTypes[question.type]
+  
+  // 選択肢画面の問題番号更新
+  const optionsQuestionNumberElement = document.getElementById("options-question-number")
+  if (optionsQuestionNumberElement) {
+    optionsQuestionNumberElement.textContent = `問題 ${gameState.currentQuestion + 1} / ${gameState.shuffledQuestions.length}`
+  }
+
+  // ソーシャルタイプ情報を選択肢画面にも表示
+  const optionsTypeEmojiElement = document.getElementById("options-type-emoji")
+  const optionsTypeNameElement = document.getElementById("options-type-name")
+  const optionsTypeDescElement = document.getElementById("options-type-desc")
+  
+  if (optionsTypeEmojiElement) optionsTypeEmojiElement.textContent = type.emoji
+  if (optionsTypeNameElement) optionsTypeNameElement.textContent = type.name
+  if (optionsTypeDescElement) optionsTypeDescElement.textContent = type.description
+
+  // 問題文を選択肢画面にも表示
+  const optionsQuestionTextElement = document.getElementById("options-question-text")
+  if (optionsQuestionTextElement) {
+    optionsQuestionTextElement.textContent = question.question
+  }
+
+  // 選択肢コンテナをクリア
+  const optionsContainer = document.getElementById("options-container")
+  if (optionsContainer) {
+    optionsContainer.innerHTML = ""
+  }
+
+  // 結果セクションを非表示
+  const resultSection = document.getElementById("result-section")
+  if (resultSection) resultSection.style.display = "none"
+
+  // 選択肢画面に切り替え
+  showScreen("options")
+  
+  // 少し待ってから選択肢を表示開始
+  setTimeout(() => {
+    showOptionsOneByOne()
+  }, 500)
+}
+
+        // 選択肢を1つずつ表示する関数
+        function showOptionsOneByOne() {
+          console.log("選択肢を1つずつ表示開始")
+          const question = gameState.shuffledQuestions[gameState.currentQuestion]
+          const optionsContainer = document.getElementById("options-container")
+          
+          if (!optionsContainer) {
+            console.log("optionsContainer が見つかりません")
+            return
+          }
+
+          // 全ての選択肢を作成（非表示状態で）
+          question.options.forEach((option, index) => {
+            const button = document.createElement("div")
+            button.className = "option-button"
+            button.style.opacity = "0"
+            button.style.transform = "translateY(20px)"
+            button.style.transition = "all 0.3s ease"
+            button.onclick = () => selectAnswer(index)
+
+            button.innerHTML = `
+  <div style="font-size: 2em; min-width: 60px;">${option.icon}</div>
+  <div style="flex: 1;">
+    <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 2px;">${option.text}</div>
+    <div style="font-size: 0.75em; color: #9ca3af;">選択肢 ${String.fromCharCode(65 + index)}</div>
+  </div>
+`
+
+            optionsContainer.appendChild(button)
+          })
+
+          // 選択肢を1つずつ表示
+          const buttons = optionsContainer.querySelectorAll('.option-button')
+          let currentIndex = 0
+
+          function showNextOption() {
+            if (currentIndex < buttons.length) {
+              console.log(`選択肢 ${currentIndex + 1} を表示`)
+              const button = buttons[currentIndex]
+              button.style.opacity = "1"
+              button.style.transform = "translateY(0)"
+              currentIndex++
+              
+              if (currentIndex < buttons.length) {
+                setTimeout(showNextOption, 800) // 0.8秒間隔
+              } else {
+                // 全て表示完了後、タイマー開始
+                setTimeout(() => {
+                  console.log("タイマー開始")
+                  startTimer()
+                }, 500)
+              }
+            }
+          }
+
+          // 最初の選択肢を表示
+          setTimeout(showNextOption, 300)
+        }
+
+        // タイマー開始
+        function startTimer() {
+          gameState.timeLeft = 15
+          gameState.isTimerActive = true
+          updateTimerDisplay()
+
+          timerInterval = setInterval(() => {
+            gameState.timeLeft--
+            updateTimerDisplay()
+
+            if (gameState.timeLeft <= 0) {
+              handleTimeUp()
+            }
+          }, 1000)
+        }
+
+        // タイマー表示更新
+        function updateTimerDisplay() {
+          const timerTextElement = document.getElementById("timer-text")
+          const timerProgressElement = document.getElementById("timer-progress")
+
+          if (timerTextElement) {
+            timerTextElement.textContent = gameState.timeLeft + "秒"
+            timerTextElement.className = "timer-text" + (gameState.timeLeft <= 5 ? " warning" : "")
+          }
+
+          if (timerProgressElement) {
+            const progressPercent = (gameState.timeLeft / 15) * 100
+            timerProgressElement.style.width = progressPercent + "%"
+            timerProgressElement.className = "timer-progress" + (gameState.timeLeft <= 5 ? " warning" : "")
+          }
+        }
+
+        // タイマー停止
+        function stopTimer() {
+          gameState.isTimerActive = false
+          if (timerInterval) {
+            clearInterval(timerInterval)
+          }
+        }
+
+        // 時間切れ処理
+        function handleTimeUp() {
+          stopTimer()
+          gameState.selectedAnswer = -1
+          showAnswerResult()
+          updateStats(false)
+        }
+
+        // 回答選択
+        function selectAnswer(answerIndex) {
+          if (gameState.selectedAnswer !== null || gameState.showResult) return
+
+          console.log("回答選択:", answerIndex)
+          stopTimer()
+          gameState.selectedAnswer = answerIndex
+
+          const isCorrect = gameState.shuffledQuestions[gameState.currentQuestion].options[answerIndex].correct
+          showAnswerResult()
+          updateStats(isCorrect)
+        }
+
+        // 回答結果表示
+        function showAnswerResult() {
+          const question = gameState.shuffledQuestions[gameState.currentQuestion]
+          const options = document.querySelectorAll(".option-button")
+          const resultMessageElement = document.getElementById("result-message")
+          const nextButtonElement = document.getElementById("next-button")
+
+          question.options.forEach((option, index) => {
+            const button = options[index]
+            if (button) {
+              button.classList.add("disabled")
+
+              if (option.correct) {
+                button.classList.add("correct")
+                button.innerHTML += '<div class="result-icon">✅</div>'
+              } else if (gameState.selectedAnswer === index) {
+                button.classList.add("incorrect")
+                button.innerHTML += '<div class="result-icon">❌</div>'
+              }
+            }
+          })
+
+          if (resultMessageElement) {
+            if (gameState.selectedAnswer === -1) {
+              resultMessageElement.textContent = "⏰ 時間切れ！"
+              resultMessageElement.className = "result-message timeout"
+            } else if (question.options[gameState.selectedAnswer].correct) {
+              resultMessageElement.textContent = "🎉 正解！"
+              resultMessageElement.className = "result-message correct"
+            } else {
+              resultMessageElement.textContent = "❌ 不正解"
+              resultMessageElement.className = "result-message incorrect"
+            }
+          }
+
+          if (nextButtonElement) {
+            if (gameState.currentQuestion < gameState.shuffledQuestions.length - 1) {
+              nextButtonElement.innerHTML = "⚡ 次の問題"
+            } else {
+              nextButtonElement.innerHTML = "🏆 結果を見る"
+            }
+          }
+
+          const resultSection = document.getElementById("result-section")
+          if (resultSection) resultSection.style.display = "block"
+          gameState.showResult = true
+        }
+
+        // 統計更新
+        function updateStats(isCorrect) {
+          const questionType = gameState.shuffledQuestions[gameState.currentQuestion].type
+
+          gameState.stats.totalQuestions++
+          if (isCorrect) {
+            gameState.stats.correctAnswers++
+            gameState.stats.streak++
+            gameState.stats.maxStreak = Math.max(gameState.stats.maxStreak, gameState.stats.streak)
+          } else {
+            gameState.stats.streak = 0
+          }
+
+          gameState.stats.typeStats[questionType].total++
+          if (isCorrect) {
+            gameState.stats.typeStats[questionType].correct++
+          }
+
+          updateStatsDisplay()
+        }
+
+        // 次の問題
+        function nextQuestion() {
+          if (gameState.currentQuestion < gameState.shuffledQuestions.length - 1) {
+            gameState.currentQuestion++
+            gameState.selectedAnswer = null
+            gameState.showResult = false
+            showScreen("question")
+            displayQuestion()
+          } else {
+            showFinalResults()
+          }
+        }
+
+        // 最終結果表示
+        function showFinalResults() {
+          showScreen("result")
+
+          const accuracy =
+            gameState.stats.totalQuestions > 0
+              ? Math.round((gameState.stats.correctAnswers / gameState.stats.totalQuestions) * 100)
+              : 0
+
+          let scoreEmoji, scoreMessage
+          if (accuracy >= 80) {
+            scoreEmoji = "🏆"
+            scoreMessage = "素晴らしい！"
+          } else if (accuracy >= 60) {
+            scoreEmoji = "🥈"
+            scoreMessage = "良くできました！"
+          } else if (accuracy >= 40) {
+            scoreEmoji = "🥉"
+            scoreMessage = "もう少し！"
+          } else {
+            scoreEmoji = "📚"
+            scoreMessage = "練習あるのみ！"
+          }
+
+          const finalScoreElement = document.getElementById("final-score")
+          const finalMessageElement = document.getElementById("final-message")
+          const finalAccuracyElement = document.getElementById("final-accuracy")
+          const finalCorrectElement = document.getElementById("final-correct")
+          const finalTotalElement = document.getElementById("final-total")
+          const finalMaxStreakElement = document.getElementById("final-max-streak")
+
+          if (finalScoreElement) finalScoreElement.textContent = scoreEmoji
+          if (finalMessageElement) finalMessageElement.textContent = scoreMessage
+          if (finalAccuracyElement) finalAccuracyElement.textContent = accuracy + "%"
+          if (finalCorrectElement) finalCorrectElement.textContent = gameState.stats.correctAnswers
+          if (finalTotalElement) finalTotalElement.textContent = gameState.stats.totalQuestions
+          if (finalMaxStreakElement) finalMaxStreakElement.textContent = gameState.stats.maxStreak
+
+          const typeResultsContainer = document.getElementById("type-results")
+          if (typeResultsContainer) {
+            typeResultsContainer.innerHTML = ""
+
+            Object.entries(socialTypes).forEach(([key, type]) => {
+              const typeStats = gameState.stats.typeStats[key]
+              const typeAccuracy = typeStats.total > 0 ? Math.round((typeStats.correct / typeStats.total) * 100) : 0
+
+              const resultDiv = document.createElement("div")
+              resultDiv.className = "type-result"
+              resultDiv.innerHTML = `
+                <div class="type-info">
+                  <span style="font-size: 1.5em;">${type.emoji}</span>
+                  <span>${type.name}</span>
+                </div>
+                <div class="type-score">
+                  <div class="type-accuracy">${typeAccuracy}%</div>
+                  <div class="type-count">${typeStats.correct}/${typeStats.total}問</div>
+                </div>
+              `
+
+              typeResultsContainer.appendChild(resultDiv)
+            })
+          }
+        }
+
+        // メニューに戻る
+        function showMenu() {
+          showScreen("menu")
+          gameState.currentQuestion = 0
+          gameState.selectedAnswer = null
+          gameState.showResult = false
+          gameState.timeLeft = 15
+          stopTimer()
+        }
+
+        // 初期化
+        document.addEventListener("DOMContentLoaded", () => {
+          console.log("DOM読み込み完了")
+          updateStatsDisplay()
+          showScreen("menu")
+        })
+    </script>
+</body>
+</html>
+
+
